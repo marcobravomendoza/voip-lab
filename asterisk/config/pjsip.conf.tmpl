@@ -1,0 +1,125 @@
+; pjsip.conf - SIP configuration for chan_pjsip / res_pjsip.
+;
+; TEMPLATE: entrypoint.sh renders this file into /etc/asterisk/pjsip.conf,
+; replacing only ${LAB_*} variables with values from .env.
+; Reload with "module reload res_pjsip.so" (CLI) or "pjsip reload".
+;
+; Each section is an object; "type=" says which kind:
+;   transport  socket Asterisk listens on (and the address it advertises)
+;   endpoint   profile of a phone or trunk: codecs, dialplan context, NAT
+;   auth       digest credentials
+;   aor        Address of Record: where a registered phone can be reached
+; Sections marked (!) are templates: they create no object, others inherit
+; from them with [name](template).
+
+;==============================================================================
+; Global settings
+;==============================================================================
+[global]
+type = global
+; User-Agent / Server header in every SIP message Asterisk sends.
+user_agent = voip-lab-asterisk
+
+;==============================================================================
+; Transport: UDP 5060, behind Docker NAT
+;==============================================================================
+[transport-udp]
+type = transport
+protocol = udp
+; Listen on every interface of the container (172.28.0.10 inside voip_net).
+bind = 0.0.0.0:5060
+
+; Networks Asterisk reaches WITHOUT NAT: the Docker network and loopback.
+; Messages to these networks keep the internal address (172.28.0.10).
+local_net = 172.28.0.0/24
+local_net = 127.0.0.0/8
+
+; For any destination NOT in local_net (the softphones on the LAN), Asterisk
+; replaces its internal IP with the host LAN IP:
+;   - in Via and Contact headers  -> external_signaling_address
+;   - in the SDP (c= line)        -> external_media_address
+; Docker forwards host:5060 and host:10000-10049 to this container.
+external_signaling_address = ${LAB_HOST_IP}
+external_media_address = ${LAB_HOST_IP}
+
+;==============================================================================
+; Templates shared by all extensions
+;==============================================================================
+[endpoint-tpl](!)
+type = endpoint
+; Transport used for calls TO this endpoint.
+transport = transport-udp
+; Dialplan context (extensions.conf) where calls FROM this endpoint start.
+context = from-internal
+; Codecs: reset the list, then allow G.711 u-law and a-law only.
+; Order matters: the first one is preferred.
+disallow = all
+allow = ulaw,alaw
+; DTMF as RTP events (RFC 4733, formerly RFC 2833).
+dtmf_mode = rfc4733
+; Media always flows through Asterisk (no re-INVITE to connect phones
+; directly). Required behind NAT; like always calling rtpengine_manage().
+direct_media = no
+; NAT handling on the phone side:
+;   rtp_symmetric    send RTP back to where it comes from, not to the SDP address
+;   force_rport      reply to the source port of the request (RFC 3581)
+;   rewrite_contact  store the real source IP:port as the contact, not the
+;                    Contact header (like fix_nated_register / fix_nated_contact)
+rtp_symmetric = yes
+force_rport = yes
+rewrite_contact = yes
+
+[auth-tpl](!)
+type = auth
+; Username + plaintext password, checked with digest authentication.
+auth_type = userpass
+
+[aor-tpl](!)
+type = aor
+; One registered device per extension; a new REGISTER replaces the old one
+; (e.g. when the phone changes IP).
+max_contacts = 1
+remove_existing = yes
+; Send SIP OPTIONS every 30 s to each contact: shows reachability and RTT
+; in "pjsip show contacts" and keeps NAT pinholes open (like nathelper pings).
+qualify_frequency = 30
+
+;==============================================================================
+; Extensions. The same name is used for the endpoint, auth and aor objects.
+;==============================================================================
+
+; --- 1001 (Linphone on the Mac) ---
+[1001](endpoint-tpl)
+callerid = "Ext 1001" <1001>
+auth = 1001
+aors = 1001
+
+[1001](auth-tpl)
+username = 1001
+password = ${LAB_EXT_1001_PASSWORD}
+
+[1001](aor-tpl)
+
+; --- 1002 (Linphone on the mobile phone) ---
+[1002](endpoint-tpl)
+callerid = "Ext 1002" <1002>
+auth = 1002
+aors = 1002
+
+[1002](auth-tpl)
+username = 1002
+password = ${LAB_EXT_1002_PASSWORD}
+
+[1002](aor-tpl)
+
+; --- 1003 (spare: second softphone or SIPp tests) ---
+[1003](endpoint-tpl)
+callerid = "Ext 1003" <1003>
+auth = 1003
+aors = 1003
+
+[1003](auth-tpl)
+username = 1003
+password = ${LAB_EXT_1003_PASSWORD}
+
+[1003](aor-tpl)

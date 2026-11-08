@@ -28,6 +28,17 @@ the start of each session to know where we are.
   from scratch: compare Asterisk concepts with them instead.
 - Step by step: never move to the next phase until the user confirms the current
   one works.
+- Division of work (agreed 2026-11-02; the goal is the user's real skill, not
+  just the repo, within the 3-4 h/week budget):
+  - The USER writes the core Asterisk config that interviews ask about
+    (dialplan, key PJSIP objects, queues, AMI/ARI logic), drives the CLI and
+    debugs. Claude explains the concept, gives requirements, then reviews and
+    verifies what the user wrote. Do not write those files for the user.
+  - CLAUDE does infrastructure and boilerplate (Docker, compose, Makefile, CI,
+    test scripts, small default-heavy configs, doc drafts) in parallel, so the
+    schedule does not slip.
+  - Each week includes one small challenge done without help, and week 2
+    includes rewriting pjsip.conf.tmpl from requirements.
 - Never install anything, never use sudo, never `git push` without asking first.
   Give the exact commands and let the user run sudo commands.
 - Every week ends with: a verifiable deliverable (command + expected output),
@@ -73,7 +84,7 @@ Docker network `voip_net`, bridge, subnet `172.28.0.0/24`, fixed IPs:
   (downloads.asterisk.org), current LTS, multi-stage Dockerfile: build stage with
   bundled pjproject, runtime stage with only runtime libs, unprivileged user
   `asterisk`, version via `ARG ASTERISK_VERSION`. First build takes 10-20 min on
-  this laptop: warn before starting it.
+  this laptop: warn before starting it. Measured 2026-11-02: ~5 min uncached (3.6 min compile), seconds when cached.
   - Version check 2026-11-01: 22.x is the current stable LTS (22.11.0); 24.x LTS
     is still a release candidate. Use 22.x; upgrading to 24 is a week-9 exercise.
 - Asterisk configs are mounted read-only from the repo. Files with secrets or the
