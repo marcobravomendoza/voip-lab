@@ -27,9 +27,14 @@
   a cached 200 OK (false PASS); "compose run" recreated Asterisk on .env
   change (fixed with --no-deps). Verified tests fail when credentials differ.
 
+- Point 8: docs/architecture.md, testing.md, phase-1-asterisk.md,
+  troubleshooting.md, ADR 0001/0002, .github/workflows/ci.yml, README week 1
+  sections. CI simulated locally from a fresh clone with .env.example:
+  lint OK, up healthy in 8.5 s, 8/8 PASS. Not verified: the CI image build
+  with build-push-action + GHA cache (only runs on GitHub).
+- User notes: answers 1-6 reviewed (audio OK both ways, note 3 rewritten).
+
 ### Pending (week 1)
-- User: fix answer 3 in notes, confirm two-way audio, review SIPp XML.
-- 8: docs (architecture, testing, phase-1 page, ADR 0001/0002), CI workflow.
 - 9: GitHub repo + push (user), CI green, tag v0.1.
 
 ### Open questions
@@ -44,4 +49,5 @@
   (cache not reused from the earlier `docker build`); later builds cached.
 
 ### Next step
-Point 8: docs (architecture, testing, phase-1 page, ADR 0001/0002) and CI.
+Point 9: decide commit email, create GitHub repo (web, gh not installed),
+replace OWNER in the README badge, push (user), CI green, tag v0.1.
