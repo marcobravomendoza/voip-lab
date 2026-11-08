@@ -3,7 +3,7 @@
 Reproducible VoIP lab with Asterisk, Kamailio and RTPengine in Docker, built
 from scratch as a learning project.
 
-[![CI](https://github.com/OWNER/voip-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/voip-lab/actions/workflows/ci.yml)
+[![CI](https://github.com/marcobravomendoza/voip-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/marcobravomendoza/voip-lab/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## Architecture
