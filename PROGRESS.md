@@ -1,6 +1,6 @@
 # PROGRESS
 
-## Week 1 — in progress (started 2026-11-02)
+## Week 1 — done (2026-11-01 to 2026-11-08), tag v0.1
 
 ### Done
 - Session 0 (2026-11-01): host checked; Docker CE 29.9, git, make, sngrep,
@@ -34,20 +34,16 @@
   with build-push-action + GHA cache (only runs on GitHub).
 - User notes: answers 1-6 reviewed (audio OK both ways, note 3 rewritten).
 
-### Pending (week 1)
-- 9: GitHub repo + push (user), CI green, tag v0.1.
+- Point 9: GitHub repo marcobravomendoza/voip-lab (public), commits with the
+  GitHub noreply email, SSH key added. CI verified via the GitHub API: run on
+  cd76210, both jobs success (~5 min, Asterisk built on the runner).
 
 ### Open questions
-- Schedule: realistic estimate is 12-14 weeks at the current pace. Proposal:
-  keep weeks 1-4 depth, trim extras in weeks 6-9 (simple Grafana panel,
-  minimal ARI app, FreePBX essentials, drop VICIdial) to land at ~11 weeks.
-  User decides at the end of week 1.
-- Git email is public in commits; switch to the GitHub noreply address
-  before the first push if desired.
 - Wi-Fi DHCP: reserve 192.168.1.157 in the router.
-- One unexpected full recompile on the first `docker compose build`
-  (cache not reused from the earlier `docker build`); later builds cached.
+- Track real hours per week to re-estimate the plan.
 
 ### Next step
-Point 9: decide commit email, create GitHub repo (web, gh not installed),
-replace OWNER in the README badge, push (user), CI green, tag v0.1.
+Week 2 (Nov 9-15): PJSIP in depth. The user rewrites pjsip.conf.tmpl from
+requirements; first provoked-failure candidates noted: remove
+external_media_address (one-way audio), remove external_signaling_address
+(call drops after ~32 s without ACK).

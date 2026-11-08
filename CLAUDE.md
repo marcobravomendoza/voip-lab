@@ -141,14 +141,31 @@ softphone, repo layout, sample test output, ADR links, "What I learned", license
 
 ## Plan
 
-| Week | Content | Tag |
-|------|---------|-----|
-| 1 | Environment, repo, Asterisk in a container, architecture and CLI, 2 softphones calling each other, first SIPp tests | v0.1 |
-| 2 | PJSIP in depth (endpoints/aors/auth/identify, transports, NAT, RTP, codecs), debug 4 provoked failures | v0.2 |
-| 3 | Dialplan, voicemail, music on hold, simple IVR | v0.3 |
-| 4 | Kamailio (registrar + dispatcher) + RTPengine in front of Asterisk, SIP trunk, CDR, basic security; full compose, diagram, README | v0.4 |
-| 5 | Queues with app_queue (strategies, agents, pauses, overflow) | v0.5 |
-| 6 | MixMonitor, queue_log and CDR in a DB, SIPp test calls, Grafana panel | v0.6 |
-| 7 | AMI, ARI, AGI with Python (queue status, click-to-call, ARI app) | v0.7 |
-| 8 | FreePBX end to end (install, extensions, trunk, routes, IVR, queues, recordings, time conditions, reports, backup, mapping to Asterisk files). VICIdial theory only | v0.8 |
-| 9 (~2 h) | TLS/SRTP, Asterisk backup and upgrade, final README, release v1.0, interview questions, LinkedIn post, CV line | v1.0 |
+Official plan, agreed 2026-11-08 (option A: 3.5 h/week, trimmed scope).
+Week 1 took ~2.5x its hour budget; one topic with real hands-on work costs
+about 7 h, so big topics span two weeks. Re-estimate at the end of each week
+with the user's real hours.
+
+| Week | Dates | Content | Tag |
+|------|-------|---------|-----|
+| 1 | Nov 1-8 | Asterisk in Docker, softphones, SIPp smoke tests, CI | v0.1 |
+| 2 | Nov 9-15 | PJSIP in depth (user rewrites pjsip.conf.tmpl): transports, codecs, identify | |
+| 3 | Nov 16-22 | 4 provoked failures and their debugging | v0.2 |
+| 4 | Nov 23-29 | Advanced dialplan, voicemail, music on hold | |
+| 5 | Nov 30-Dec 6 | IVR | v0.3 (CV milestone: Asterisk basics) |
+| 6 | Dec 7-13 | Kamailio (registrar + dispatcher) + RTPengine in front of Asterisk | |
+| 7 | Dec 14-Jan 3 | SIP trunk, basic security, phase 2 README (includes holidays) | v0.4 (CV milestone) |
+| 8 | Jan 4-10 | Queues I: strategies, members, pauses | |
+| 9 | Jan 11-17 | Queues II: overflow, announcements, queue_log | v0.5 |
+| 10 | Jan 18-24 | MixMonitor, CDR and queue_log in PostgreSQL; Grafana panel built by Claude | v0.6 |
+| 11 | Jan 25-31 | AMI + FastAGI with Python | |
+| 12 | Feb 1-7 | Minimal ARI app | v0.7 (CV milestone: contact center) |
+| 13 | Feb 8-14 | FreePBX I: install, extensions, trunk, routes | |
+| 14 | Feb 15-21 | FreePBX II: IVR, queues, recordings, mapping to Asterisk files | v0.8 |
+| 15 | Feb 22-28 | TLS/SRTP, upgrade to Asterisk 24, final release, CV line | v1.0 |
+
+Trimmed on purpose: VICIdial (dropped), Grafana and Prometheus (the user
+already masters them: Claude builds, user reviews), CDR moved out of the
+Kamailio weeks, AGI limited to a FastAGI example, FreePBX time conditions and
+backup as theory only. Do not trim: provoked failures, queues, IVR, FreePBX
+core, TLS/SRTP.

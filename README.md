@@ -27,14 +27,14 @@ front of Asterisk. Details, IP plan and ports: [docs/architecture.md](docs/archi
 | Tag  | Week | Content | Status |
 |------|------|---------|--------|
 | v0.1 | 1 | Asterisk built from source in Docker, 2 softphones, SIPp smoke tests | ✅ done |
-| v0.2 | 2 | PJSIP in depth, NAT, codecs, debugging provoked failures | ⏳ planned |
-| v0.3 | 3 | Dialplan, voicemail, music on hold, IVR | ⏳ planned |
-| v0.4 | 4 | Kamailio + RTPengine in front of Asterisk, SIP trunk, CDR, security | ⏳ planned |
-| v0.5 | 5 | Call queues (app_queue) | ⏳ planned |
-| v0.6 | 6 | Recording, queue_log and CDR in a database, Grafana | ⏳ planned |
-| v0.7 | 7 | AMI, ARI and AGI with Python | ⏳ planned |
-| v0.8 | 8 | FreePBX | ⏳ planned |
-| v1.0 | 9 | TLS/SRTP, backup and upgrade, final release | ⏳ planned |
+| v0.2 | 2-3 | PJSIP in depth, NAT, codecs, debugging provoked failures | ⏳ planned |
+| v0.3 | 4-5 | Dialplan, voicemail, music on hold, IVR | ⏳ planned |
+| v0.4 | 6-7 | Kamailio + RTPengine in front of Asterisk, SIP trunk, basic security | ⏳ planned |
+| v0.5 | 8-9 | Call queues (app_queue) | ⏳ planned |
+| v0.6 | 10 | Recording, queue_log and CDR in a database, Grafana | ⏳ planned |
+| v0.7 | 11-12 | AMI, ARI and FastAGI with Python | ⏳ planned |
+| v0.8 | 13-14 | FreePBX | ⏳ planned |
+| v1.0 | 15 | TLS/SRTP, Asterisk upgrade, final release | ⏳ planned |
 
 ## Quick start
 
