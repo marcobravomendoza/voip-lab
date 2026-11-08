@@ -1,0 +1,74 @@
+# voip-lab - Docker Compose definition.
+# Phase 1: Asterisk only; softphones register directly on it.
+# Values like ${LAB_HOST_IP} come from the .env file next to this one.
+
+# Project name: prefix for containers, volumes and default networks.
+name: voip-lab
+
+services:
+  asterisk:
+    # Build the image from asterisk/Dockerfile, passing the version from .env.
+    build:
+      context: ./asterisk
+      args:
+        ASTERISK_VERSION: ${LAB_ASTERISK_VERSION:?LAB_ASTERISK_VERSION must be set in .env}
+    # Name and tag of the built image.
+    image: voip-lab/asterisk:${LAB_ASTERISK_VERSION}
+    hostname: asterisk
+
+    # tini as PID 1: forwards signals to Asterisk and reaps zombie processes.
+    init: true
+    # Start again after a crash or a host reboot, unless stopped by hand.
+    restart: unless-stopped
+    # Memory cap: Asterisk uses ~50 MiB idle; protects the 8 GB host.
+    mem_limit: 512m
+
+    # All variables from .env (LAB_*) go into the container, where
+    # entrypoint.sh uses them to render the *.tmpl config files.
+    env_file: .env
+    environment:
+      # Time zone for logs and CDRs (needs tzdata in the image).
+      TZ: ${LAB_TZ:-UTC}
+
+    networks:
+      voip_net:
+        # Fixed IP: pjsip.conf (local_net) and other services rely on it.
+        ipv4_address: 172.28.0.10
+
+    # Published ports (host -> container, DNAT). Format host:container/proto.
+    ports:
+      - "5060:5060/udp"                 # SIP signaling
+      - "10000-10049:10000-10049/udp"   # RTP media, same range as rtp.conf
+
+    volumes:
+      # Repo config, read-only; entrypoint.sh copies/renders it into /etc/asterisk.
+      # ":z" relabels the directory so SELinux lets containers read it.
+      - ./asterisk/config:/etc/asterisk-src:ro,z
+      # Named volumes: survive "docker compose down" and image rebuilds.
+      - asterisk_logs:/var/log/asterisk     # messages.log, security.log, cdr-csv/
+      - asterisk_spool:/var/spool/asterisk  # voicemail, recordings
+
+    # "healthy" when the CLI can talk to the running Asterisk core.
+    healthcheck:
+      test: ["CMD", "asterisk", "-rx", "core show uptime"]
+      interval: 10s       # run every 10 s
+      timeout: 5s         # fail if it takes longer than 5 s
+      retries: 3          # unhealthy after 3 consecutive failures
+      start_period: 15s   # failures during startup do not count
+
+networks:
+  voip_net:
+    # Fixed name (no "voip-lab_" prefix) so later phases can refer to it.
+    name: voip_net
+    driver: bridge
+    driver_opts:
+      # Linux bridge name on the host: used by "make sngrep" and tcpdump.
+      com.docker.network.bridge.name: br-voip_net
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+          gateway: 172.28.0.1
+
+volumes:
+  asterisk_logs:
+  asterisk_spool:

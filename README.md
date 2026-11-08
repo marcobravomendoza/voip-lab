@@ -31,7 +31,7 @@ Requirements: Linux host with Docker Engine and Docker Compose v2, `make`.
 ```bash
 git clone <repo-url> voip-lab && cd voip-lab
 cp .env.example .env      # set LAB_HOST_IP and the passwords
-make build                # first build compiles Asterisk (15-25 min)
+make build                # first build compiles Asterisk (~5 min)
 make up
 make test-phase1
 ```

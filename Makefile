@@ -7,7 +7,7 @@ COMPOSE := docker compose
 BRIDGE := br-voip_net
 
 .DEFAULT_GOAL := help
-.PHONY: help up down build cli logs ps sngrep lint test-phase1
+.PHONY: help up down build cli reload logs ps sngrep lint test-phase1
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -19,11 +19,15 @@ up: ## Start the lab in the background
 down: ## Stop and remove the lab containers (named volumes are kept)
 	$(COMPOSE) down
 
-build: ## Build the images (first Asterisk build takes 15-25 min)
+build: ## Build the images (first Asterisk build takes ~5 min)
 	$(COMPOSE) build
 
 cli: ## Open the Asterisk CLI (verbose level 3)
 	$(COMPOSE) exec asterisk asterisk -rvvv
+
+reload: ## Re-render config from the repo and reload Asterisk (no restart)
+	$(COMPOSE) exec asterisk entrypoint.sh render
+	$(COMPOSE) exec asterisk asterisk -rx "core reload"
 
 logs: ## Follow the logs of all services
 	$(COMPOSE) logs -f --tail=100

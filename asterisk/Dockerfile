@@ -125,11 +125,12 @@ LABEL org.opencontainers.image.title="voip-lab-asterisk" \
 # Runtime libraries only (the non -dev counterparts of stage 1), plus:
 #   gettext-base     provides envsubst for the *.tmpl config templates
 #   ca-certificates  HTTPS from res_curl
+#   tzdata           time zones, so TZ in docker-compose.yml works
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       libedit2 libjansson4 libxml2 libxslt1.1 libsqlite3-0 libuuid1 \
       libssl3t64 libsrtp2-1 libcurl4t64 libspeexdsp1 libodbc2 \
-      gettext-base ca-certificates \
+      gettext-base ca-certificates tzdata \
  && rm -rf /var/lib/apt/lists/*
 
 # Unprivileged system user and group that will run Asterisk.
