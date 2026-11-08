@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<!--
+  REGISTER with digest authentication.
+
+  Flow:  REGISTER -> 401 (challenge) -> REGISTER + Authorization -> 200 OK
+
+  Usage (from the sipp container):
+    sipp -sf register_auth.xml <asterisk_ip>:5060 -m 1 \
+         -s <user> -au <user> -ap <password>
+
+  Every run must pass a unique run id, used in the Call-ID and Via branch:
+    -key run_id <unique> -cid_str "%u-%p-<unique>@%s"
+  Without it, two quick runs send identical Call-ID/branch values and the
+  server treats the second request as a retransmission of the first one
+  (it replays the cached response from the still-alive transaction).
+
+  Keywords in [brackets] are filled in by SIPp at runtime:
+    [service]      the -s value (the extension/user to register)
+    [remote_ip]    the target given on the command line
+    [local_ip], [local_port], [transport]  SIPp's own socket
+    [branch], [call_id], [pid], [call_number]  per message/call values,
+                   unique only within one run (hence run_id)
+    [authentication]  Authorization header computed from the last 401/407
+                      and the -au/-ap credentials
+
+  A wrong password gets a new 401 instead of the 200 OK, so the scenario
+  fails (exit code 1). The smoke test uses that to check rejection.
+-->
+<scenario name="REGISTER with digest auth">
+
+  <!-- 1. First REGISTER, without credentials. retrans: resend every 500 ms
+       if nothing arrives (UDP retransmission, like Timer E). -->
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]-[run_id]
+      Max-Forwards: 70
+      From: <sip:[service]@[remote_ip]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[service]@[remote_ip]>
+      Call-ID: [call_id]
+      CSeq: 1 REGISTER
+      Contact: <sip:[service]@[local_ip]:[local_port]>
+      Expires: 60
+      User-Agent: voip-lab-sipp
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- 2. Expect the challenge. auth="true" stores the WWW-Authenticate
+       header so [authentication] can answer it. -->
+  <recv response="401" auth="true" />
+
+  <!-- 3. Same REGISTER (same Call-ID, CSeq + 1) with the Authorization header. -->
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]-[run_id]
+      Max-Forwards: 70
+      From: <sip:[service]@[remote_ip]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[service]@[remote_ip]>
+      Call-ID: [call_id]
+      CSeq: 2 REGISTER
+      Contact: <sip:[service]@[local_ip]:[local_port]>
+      Expires: 60
+      [authentication]
+      User-Agent: voip-lab-sipp
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- 4. Success only if Asterisk accepts the credentials. -->
+  <recv response="200" />
+
+</scenario>

@@ -56,6 +56,25 @@ services:
       retries: 3          # unhealthy after 3 consecutive failures
       start_period: 15s   # failures during startup do not count
 
+  # SIPp traffic generator, used only by the tests.
+  # The "test" profile keeps it out of "make up"; tests start it with
+  # "docker compose run --rm sipp <sipp arguments>".
+  sipp:
+    profiles: ["test"]
+    build:
+      context: ./tests/sipp
+    image: voip-lab/sipp:3.7
+    networks:
+      voip_net:
+        ipv4_address: 172.28.0.100
+    volumes:
+      # Reusable XML scenarios, read-only.
+      - ./tests/sipp/scenarios:/scenarios:ro,z
+    # Asterisk must be up before a test call.
+    depends_on:
+      asterisk:
+        condition: service_healthy
+
 networks:
   voip_net:
     # Fixed name (no "voip-lab_" prefix) so later phases can refer to it.

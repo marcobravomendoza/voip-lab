@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<!--
+  Authenticated outgoing call (UAC = User Agent Client).
+
+  Flow:
+    INVITE -> 401 -> ACK
+    INVITE + Authorization -> (100/180/183) -> 200 OK -> ACK
+    ... hold the call for CALL_MS milliseconds ...
+    BYE -> 200 OK
+
+  Usage (from the sipp container):
+    sipp -sf uac_auth_call.xml <asterisk_ip>:5060 -m 1 \
+         -s <number_to_dial> -au <user> -ap <password> \
+         -key caller <user> -d 3000
+
+  Every run must pass a unique run id, used in the Call-ID and Via branch:
+    -key run_id <unique> -cid_str "%u-%p-<unique>@%s"
+  Without it, two quick runs send identical Call-ID/branch values and the
+  server treats the second request as a retransmission of the first one
+  (it replays the cached response from the still-alive transaction).
+
+  Custom keywords set with -key:
+    [run_id]   unique id of this test run (see above)
+    [caller]   the calling extension (From user, used by Asterisk to find
+               the endpoint and its credentials)
+  -d sets how long the <pause/> lasts (time in the call after the 200 OK).
+
+  No RTP is sent: the test checks signaling and the CDR, not audio.
+-->
+<scenario name="Authenticated call">
+
+  <!-- 1. INVITE without credentials, with an SDP offer for G.711 u-law. -->
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:[service]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]-[run_id]
+      Max-Forwards: 70
+      From: <sip:[caller]@[remote_ip]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[service]@[remote_ip]>
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Contact: <sip:[caller]@[local_ip]:[local_port]>
+      User-Agent: voip-lab-sipp
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=sipp 1 1 IN IP[local_ip_type] [local_ip]
+      s=voip-lab test
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <!-- 2. Optional 100 Trying, then the challenge. -->
+  <recv response="100" optional="true" />
+  <recv response="401" auth="true" />
+
+  <!-- 3. ACK for the 401: a non-2xx final response is acknowledged inside the
+       same transaction, so the Via branch and CSeq number are reused. -->
+  <send>
+    <![CDATA[
+
+      ACK sip:[service]@[remote_ip] SIP/2.0
+      [last_Via:]
+      Max-Forwards: 70
+      [last_From:]
+      [last_To:]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- 4. New INVITE transaction (new branch, CSeq 2) with credentials. -->
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:[service]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]-[run_id]
+      Max-Forwards: 70
+      From: <sip:[caller]@[remote_ip]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[service]@[remote_ip]>
+      Call-ID: [call_id]
+      CSeq: 2 INVITE
+      Contact: <sip:[caller]@[local_ip]:[local_port]>
+      [authentication]
+      User-Agent: voip-lab-sipp
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=sipp 1 2 IN IP[local_ip_type] [local_ip]
+      s=voip-lab test
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <!-- 5. Provisional responses are optional; the 200 OK is mandatory.
+       rrs="true" stores Record-Route/Contact to build the in-dialog requests. -->
+  <recv response="100" optional="true" />
+  <recv response="180" optional="true" />
+  <recv response="183" optional="true" />
+  <recv response="200" rrs="true" />
+
+  <!-- 6. ACK for the 200 OK: its own transaction, sent to the remote Contact. -->
+  <send>
+    <![CDATA[
+
+      ACK [next_url] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]-[run_id]
+      Max-Forwards: 70
+      From: <sip:[caller]@[remote_ip]>;tag=[pid]SIPpTag00[call_number]
+      [last_To:]
+      Call-ID: [call_id]
+      CSeq: 2 ACK
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- 7. Stay in the call for the -d duration (milliseconds). -->
+  <pause />
+
+  <!-- 8. Hang up from our side and expect 200 OK. -->
+  <send retrans="500">
+    <![CDATA[
+
+      BYE [next_url] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]-[run_id]
+      Max-Forwards: 70
+      From: <sip:[caller]@[remote_ip]>;tag=[pid]SIPpTag00[call_number]
+      [last_To:]
+      Call-ID: [call_id]
+      CSeq: 3 BYE
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" />
+
+</scenario>
