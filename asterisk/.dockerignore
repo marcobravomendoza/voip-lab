@@ -1,0 +1,4 @@
+# Only Dockerfile and entrypoint.sh are needed in the build context.
+# config/ is mounted at runtime (read-only), never baked into the image.
+config/
+*.md
