@@ -1,0 +1,29 @@
+# --- Secrets: real values live only in .env (see .env.example) ---
+.env
+*.key
+*.pem
+
+# --- Personal notes (Spanish, not published) ---
+notes/
+
+# --- Packet captures ---
+*.pcap
+*.pcapng
+*.cap
+
+# --- Logs and test output ---
+*.log
+logs/
+tests/**/results/
+tests/**/*_errors.log
+tests/**/*_messages.log
+
+# --- Call recordings and audio produced by the lab ---
+recordings/
+
+# --- Editors and OS ---
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
